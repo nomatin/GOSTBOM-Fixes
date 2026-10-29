@@ -7,7 +7,7 @@ set "GOSTBOM_TEMP=%TEMP%\GOSTBOM-installer-%RANDOM%-%RANDOM%"
 if exist "%GOSTBOM_TEMP%" exit /b 1
 mkdir "%GOSTBOM_TEMP%"
 if errorlevel 1 exit /b 1
-"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; try { $s=[IO.File]::ReadAllText($env:GOSTBOM_SELF); $marker='# GOSTBOM_'+'POWERSHELL_START'; $i=$s.IndexOf($marker); if($i -lt 0){throw 'Installer marker missing'}; [IO.File]::WriteAllText((Join-Path $env:GOSTBOM_TEMP 'install.ps1'),$s.Substring($i+$marker.Length),[Text.UTF8Encoding]::new($true)); foreach($name in @('GOSTBOM2.dll','Vedomost.dll')){Copy-Item -LiteralPath (Join-Path $env:GOSTBOM_SOURCE $name) -Destination $env:GOSTBOM_TEMP}; exit 0 } catch { Write-Host $_; exit 1 }"
+"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; try { $s=[IO.File]::ReadAllText($env:GOSTBOM_SELF); $marker='# GOSTBOM_'+'POWERSHELL_START'; $i=$s.IndexOf($marker); if($i -lt 0){throw 'Installer marker missing'}; [IO.File]::WriteAllText((Join-Path $env:GOSTBOM_TEMP 'install.ps1'),$s.Substring($i+$marker.Length),[Text.UTF8Encoding]::new($true)); foreach($name in @('GOSTBOM2.dll','Vedomost.dll','GostBomNoPcb.dll')){Copy-Item -LiteralPath (Join-Path $env:GOSTBOM_SOURCE $name) -Destination $env:GOSTBOM_TEMP}; exit 0 } catch { Write-Host $_; exit 1 }"
 if errorlevel 1 (
     set "result=1"
     goto cleanup
@@ -15,7 +15,7 @@ if errorlevel 1 (
 "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%GOSTBOM_TEMP%\install.ps1" %*
 set "result=%errorlevel%"
 :cleanup
-"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -Command "foreach($name in @('install.ps1','GOSTBOM2.dll','Vedomost.dll')){ $p=Join-Path $env:GOSTBOM_TEMP $name; if(Test-Path -LiteralPath $p){Remove-Item -LiteralPath $p -Force} }; Remove-Item -LiteralPath $env:GOSTBOM_TEMP"
+"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoLogo -NoProfile -Command "foreach($name in @('install.ps1','GOSTBOM2.dll','Vedomost.dll','GostBomNoPcb.dll')){ $p=Join-Path $env:GOSTBOM_TEMP $name; if(Test-Path -LiteralPath $p){Remove-Item -LiteralPath $p -Force} }; Remove-Item -LiteralPath $env:GOSTBOM_TEMP"
 endlocal & exit /b %result%
 # GOSTBOM_POWERSHELL_START
 #Requires -Version 5.1
@@ -36,13 +36,19 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 2.0
 
 $Package = @'
-{"Version":"2026.10.16.3","Files":[{"Name":"GOSTBOM2.dll","FinalHash":"49F7E92CA5377ACCECD96BD4D1C9B0C8C097A0D008AFDCD7FB563381E1BAD1F2","AcceptedHashes":["8112E11420E56B5084BA6C16E17ECA0C790BC077AF28C3DF364473BDD5B6B5AE","BB6573040FA499A01EFD33A91538618136962D9D4438EB40D5E65038A25BFDF8","9F9384197A66945838B2A62246AF84528128FDD49E5CD41C514FC72FC0625F4E","16FAF740DE9CC0D71CE6DBB47C0CB2766D9CBDE3687BC7EEA99FFB20B164DF7A","5B82D0300185CCC90CD30C161D4373A4D4F3915B73B1624A99D9FFBAB7506385","49F7E92CA5377ACCECD96BD4D1C9B0C8C097A0D008AFDCD7FB563381E1BAD1F2"]},{"Name":"Vedomost.dll","FinalHash":"CFDD08F7B94D14C1044548666CDFDC3104EA91A759421E5EE1D67DC3384A691D","AcceptedHashes":["86FDC2EC9405A20B021E751C62A6BBF4C74B3A5FA610DB851CD8E47C88226951","9DDCEBBE1E61B57C5FC41B58C40D2AB60D1CC85F0C95AA6F0C10B12BA2D224B6","CFDD08F7B94D14C1044548666CDFDC3104EA91A759421E5EE1D67DC3384A691D"]}],"Dependencies":[{"Name":"Constants.dll","SHA256":"93A6EB451CDBC1989A3BBDCE9513C45E84AF88692C7AFE4BE9CAA8CED059432C"},{"Name":"FileWriter.dll","SHA256":"0067EC2CC003E5EB596B11988031C82DD40B4134DECEAA553C3A694718736958"},{"Name":"Notes.dll","SHA256":"F37B22835BA6B219C35DA28A0799E391D159C891732DF7CFCCB2A6EE2A1E044B"},{"Name":"NotesDefaultValues.dll","SHA256":"FE65CD337612636373122062B167D7D3087F276330A22ADCF095F0DF275F6E4B"},{"Name":"ProjectProperties.dll","SHA256":"67E11258E13639E85C7D42BBF677975827D96D54F6B7065801484725B0ECF204"},{"Name":"ReadXML.dll","SHA256":"FEEB9916975AB15617C4902E046B6FE3468517C4D3E492325146C03B77439630"},{"Name":"ResourceTemplate.dll","SHA256":"5A8B9375EACE9CAD04600ADC5BD6E6B9B788F247FD1527244C5A100C9B4003D1"},{"Name":"Section.dll","SHA256":"5C333BDA23B85C4E1B0B7BF81FF8D96BD84A65F7BEB6161AB33CF0A412A1A1B4"},{"Name":"SelectConfiguration.dll","SHA256":"C5774A7E079C8816E830AE8D74DC32E5C736F950121B1B94695392D68F140EDF"},{"Name":"WpfNotes.dll","SHA256":"7F36905DFA148B5F17853A0D2CEBF3A530CDB592CDA469B1A72D3093E6164BAB"},{"Name":"Altium.SDK.dll","SHA256":"9151CF30E377BB86D08CAA9C2834FF8E23C2A976D709509E85744BA8773B9263"},{"Name":"Altium.SDK.Interfaces.dll","SHA256":"1F976E27C5A428729E33F6220572EA9C65BD702161F1B3341745363DCC80326A"},{"Name":"NPOI.dll","SHA256":"F3E032AF32C27606A98936E3FCE29A99524267898707DE5A29520E64ADA9B8C4"}]}
+{"Version":"2026.10.29.1","Files":[{"Name":"GostBomNoPcb.dll","FinalHash":"005D229130DFBBC5BF25375589544312B6D3D1483DEDE77546BC5A3CA300A617","AcceptedHashes":["ABSENT","005D229130DFBBC5BF25375589544312B6D3D1483DEDE77546BC5A3CA300A617","0EEED36904B3077FFD269D2D9AE37D21BFEC6D984671DBD7DFDFFC36E94AD6D8","0094704356E460F9793CE69857F4BDC5856A5619D2EE3FEBB193D701DDBF3779","AF5BB0BEA43D3918144BD2DE1067B26C7C5CF87E47DDFB479274BD92A665C875"]},{"Name":"GOSTBOM2.dll","FinalHash":"75AF179AC3A92F9109C6D9241A375AACD126D4B5FDA1C6ED9C1602E7A7F0BB29","AcceptedHashes":["8112E11420E56B5084BA6C16E17ECA0C790BC077AF28C3DF364473BDD5B6B5AE","BB6573040FA499A01EFD33A91538618136962D9D4438EB40D5E65038A25BFDF8","9F9384197A66945838B2A62246AF84528128FDD49E5CD41C514FC72FC0625F4E","16FAF740DE9CC0D71CE6DBB47C0CB2766D9CBDE3687BC7EEA99FFB20B164DF7A","5B82D0300185CCC90CD30C161D4373A4D4F3915B73B1624A99D9FFBAB7506385","49F7E92CA5377ACCECD96BD4D1C9B0C8C097A0D008AFDCD7FB563381E1BAD1F2","75AF179AC3A92F9109C6D9241A375AACD126D4B5FDA1C6ED9C1602E7A7F0BB29"]},{"Name":"Vedomost.dll","FinalHash":"CFDD08F7B94D14C1044548666CDFDC3104EA91A759421E5EE1D67DC3384A691D","AcceptedHashes":["86FDC2EC9405A20B021E751C62A6BBF4C74B3A5FA610DB851CD8E47C88226951","9DDCEBBE1E61B57C5FC41B58C40D2AB60D1CC85F0C95AA6F0C10B12BA2D224B6","CFDD08F7B94D14C1044548666CDFDC3104EA91A759421E5EE1D67DC3384A691D"]}],"Dependencies":[{"Name":"Constants.dll","SHA256":"93A6EB451CDBC1989A3BBDCE9513C45E84AF88692C7AFE4BE9CAA8CED059432C"},{"Name":"FileWriter.dll","SHA256":"0067EC2CC003E5EB596B11988031C82DD40B4134DECEAA553C3A694718736958"},{"Name":"Notes.dll","SHA256":"F37B22835BA6B219C35DA28A0799E391D159C891732DF7CFCCB2A6EE2A1E044B"},{"Name":"NotesDefaultValues.dll","SHA256":"FE65CD337612636373122062B167D7D3087F276330A22ADCF095F0DF275F6E4B"},{"Name":"ProjectProperties.dll","SHA256":"67E11258E13639E85C7D42BBF677975827D96D54F6B7065801484725B0ECF204"},{"Name":"ReadXML.dll","SHA256":"FEEB9916975AB15617C4902E046B6FE3468517C4D3E492325146C03B77439630"},{"Name":"ResourceTemplate.dll","SHA256":"5A8B9375EACE9CAD04600ADC5BD6E6B9B788F247FD1527244C5A100C9B4003D1"},{"Name":"Section.dll","SHA256":"5C333BDA23B85C4E1B0B7BF81FF8D96BD84A65F7BEB6161AB33CF0A412A1A1B4"},{"Name":"SelectConfiguration.dll","SHA256":"C5774A7E079C8816E830AE8D74DC32E5C736F950121B1B94695392D68F140EDF"},{"Name":"WpfNotes.dll","SHA256":"7F36905DFA148B5F17853A0D2CEBF3A530CDB592CDA469B1A72D3093E6164BAB"},{"Name":"Altium.SDK.dll","SHA256":"9151CF30E377BB86D08CAA9C2834FF8E23C2A976D709509E85744BA8773B9263"},{"Name":"Altium.SDK.Interfaces.dll","SHA256":"1F976E27C5A428729E33F6220572EA9C65BD702161F1B3341745363DCC80326A"},{"Name":"NPOI.dll","SHA256":"F3E032AF32C27606A98936E3FCE29A99524267898707DE5A29520E64ADA9B8C4"}]}
 '@ | ConvertFrom-Json
 
 function Get-Sha256([string]$Path) {
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return 'ABSENT' }
     return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash
 }
 
+function Copy-FileState([string]$Source, [string]$Target) {
+    if (Test-Path -LiteralPath $Source -PathType Leaf) { Copy-Item -LiteralPath $Source -Destination $Target -Force }
+    elseif ([IO.Path]::GetFileName($Target) -eq 'GostBomNoPcb.dll') { if(Test-Path -LiteralPath $Target){Remove-Item -LiteralPath $Target -Force} }
+    else { throw "Missing required backup file: $Source" }
+}
 function Test-Administrator {
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
     $principal = New-Object Security.Principal.WindowsPrincipal($identity)
@@ -55,6 +61,7 @@ function Get-Compatibility([string]$Folder) {
     foreach ($item in $Package.Files) {
         $path = Join-Path $Folder $item.Name
         if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+            if ('ABSENT' -in @($item.AcceptedHashes)) { $changed = $true; continue }
             $issues.Add("Missing file: $($item.Name)")
             continue
         }
@@ -124,21 +131,21 @@ function Invoke-Restore([string]$Folder, [string]$BackupPath) {
     foreach ($item in $manifest.Files) {
         $source = Join-Path $backup $item.Name
         $definition = $Package.Files | Where-Object { $_.Name -eq $item.Name }
-        if (-not (Test-Path -LiteralPath $source -PathType Leaf) -or (Get-Sha256 $source) -ne $item.SHA256 -or $item.SHA256 -notin @($definition.AcceptedHashes)) {
+        if ((Get-Sha256 $source) -ne $item.SHA256 -or $item.SHA256 -notin @($definition.AcceptedHashes)) {
             throw "Backup validation failed: $($item.Name)"
         }
         $current = Join-Path $Folder $item.Name
-        if (-not (Test-Path -LiteralPath $current -PathType Leaf) -or (Get-Sha256 $current) -notin @($definition.AcceptedHashes)) {
+        if ((Get-Sha256 $current) -notin @($definition.AcceptedHashes)) {
             throw "Current DLL is unknown; restore stopped: $($item.Name)"
         }
     }
     Assert-AltiumClosed
     $restoreSnapshot = Join-Path $backup ('before-restore-' + [guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path $restoreSnapshot | Out-Null
-    foreach ($item in $manifest.Files) { Copy-Item -LiteralPath (Join-Path $Folder $item.Name) -Destination (Join-Path $restoreSnapshot $item.Name) }
+    foreach ($item in $manifest.Files) { Copy-FileState (Join-Path $Folder $item.Name) (Join-Path $restoreSnapshot $item.Name) }
     try {
         foreach ($item in $manifest.Files) {
-            Copy-Item -LiteralPath (Join-Path $backup $item.Name) -Destination (Join-Path $Folder $item.Name) -Force
+            Copy-FileState (Join-Path $backup $item.Name) (Join-Path $Folder $item.Name)
             if ((Get-Sha256 (Join-Path $Folder $item.Name)) -ne $item.SHA256) { throw "Restore verification failed: $($item.Name)" }
         }
     } catch {
@@ -148,7 +155,7 @@ function Invoke-Restore([string]$Folder, [string]$BackupPath) {
             try {
                 $snapshot = Join-Path $restoreSnapshot $item.Name
                 $current = Join-Path $Folder $item.Name
-                if ((Get-Sha256 $current) -ne (Get-Sha256 $snapshot)) { Copy-Item -LiteralPath $snapshot -Destination $current -Force }
+                if ((Get-Sha256 $current) -ne (Get-Sha256 $snapshot)) { Copy-FileState $snapshot $current }
             } catch { $rollbackErrors += $_.Exception.Message }
         }
         throw ($restoreError + '; restore snapshot: ' + $restoreSnapshot + '; rollback errors: ' + ($rollbackErrors -join '; '))
@@ -170,7 +177,7 @@ function Invoke-Install([string]$Folder) {
     foreach ($item in $Package.Files) {
         $source = Join-Path $Folder $item.Name
         $hash = Get-Sha256 $source
-        Copy-Item -LiteralPath $source -Destination (Join-Path $backup $item.Name)
+        Copy-FileState $source (Join-Path $backup $item.Name)
         if ((Get-Sha256 (Join-Path $backup $item.Name)) -ne $hash) { throw "Backup verification failed: $($item.Name)" }
         $backupFiles += [pscustomobject]@{ Name=$item.Name; SHA256=$hash }
         Expand-Payload $item (Join-Path $stage $item.Name)
@@ -193,7 +200,7 @@ function Invoke-Install([string]$Folder) {
             try {
                 $current = Join-Path $Folder $item.Name
                 if (-not (Test-Path -LiteralPath $current) -or (Get-Sha256 $current) -ne $item.SHA256) {
-                    Copy-Item -LiteralPath (Join-Path $backup $item.Name) -Destination $current -Force
+                    Copy-FileState (Join-Path $backup $item.Name) $current
                 }
                 if ((Get-Sha256 $current) -ne $item.SHA256) { throw "Rollback verification failed: $($item.Name)" }
             } catch { $rollbackErrors += $_.Exception.Message }
